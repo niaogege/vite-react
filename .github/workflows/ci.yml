@@ -1,4 +1,4 @@
-name: CI
+name: CI/持续构建
 
 # 在main分支发生push事件/pull_request时触发。
 on:
@@ -13,24 +13,34 @@ env: # 设置环境变量
   TZ: Asia/Shanghai # 时区（设置时区可使页面中的`最近更新时间`使用时区时间）
 
 jobs:
-  build: # 自定义名称
+  # 自定义修复lint问题
+  linter:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: 16
+      - run: npm i
+      - run: npm run lint
+  # 打包构建
+  builder:
+    needs: linter # 依赖前一步的lint
     runs-on: ubuntu-latest # 运行在虚拟机环境ubuntu-latest
-
     strategy:
       matrix:
-        node-version: [14.x]
-
+        node-version: [16.x]
     steps:
       - name: Checkout # 步骤1
         uses: actions/checkout@v1 # 使用的动作。格式：userName/repoName。作用：检出仓库，获取源码。 官方actions库：https://github.com/actions
-      - name: Use Node.js ${{ matrix.node-version }} # 步骤2
+      - name: Use Node.js # 步骤2
         uses: actions/setup-node@v1 # 作用：安装nodejs
         with:
           node-version: ${{ matrix.node-version }} # 版本
       - name: run deploy.sh # 步骤3
         env: # 设置环境变量
           GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }} # toKen私密变量
-        run: npm install && npm run deploy
+        run: npm run deploy
       # 3. 将打包后的代码部署到 gh-pages 分支
       # - name: Deploy 🚀
       #   uses: JamesIves/github-pages-deploy-action@3.5.7

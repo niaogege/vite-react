@@ -1,5 +1,5 @@
 import './index.css';
-import Test from './test'
+import Test from './test';
 function Header() {
   return (
     <div className="header">
